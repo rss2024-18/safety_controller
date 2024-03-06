@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>wall_follower</name>
+  <name>safety_controller</name>
   <version>1.0.0</version>
   <description>A wall follower for the racecar.</description>
   <maintainer email="sebastianag2002@gmail.com">racecar@mit.edu</maintainer>
