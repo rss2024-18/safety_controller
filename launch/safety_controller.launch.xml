@@ -1,0 +1,5 @@
+<launch>
+  <!-- Launch the wall follower with parameters -->
+  <node pkg="safety_controller" name="safety_controller" exec="safety_controller" output="screen">
+  </node>
+</launch>
