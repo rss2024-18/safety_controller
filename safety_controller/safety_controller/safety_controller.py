@@ -10,30 +10,34 @@ class SafetyController(Node):
     def __init__(self):
         super().__init__("safety_controller")
         # Declare parameters to make them available for use
-        self.declare_parameter("scan_topic", "default")
-        self.declare_parameter("drive_topic", "default")
-        self.declare_parameter("side", "default")
-        self.declare_parameter("velocity", "default")
-        self.declare_parameter("desired_distance", "default")
+        self.declare_parameter("scan_topic", "/scan")
+        self.declare_parameter("publish_topic", "/vesc/high_level/input/nav_0")
+
+        self.VELOCITY = 0.0
+        self.STEER = 0.0
 
         # Fetch constants from the ROS parameter server
         self.SCAN_TOPIC = self.get_parameter('scan_topic').get_parameter_value().string_value
-        self.DRIVE_TOPIC = self.get_parameter('drive_topic').get_parameter_value().string_value
+        self.DRIVE_TOPIC = self.get_parameter('publish_topic').get_parameter_value().string_value
 	
         self.subscription = self.create_subscription(LaserScan, self.SCAN_TOPIC, self.lidar_callback, 10)
+        self.vel_subscription = self.create_subscription(AckermannDriveStamped, "/vesc/high_level/output", self.get_velocity, 10)
         self.publisher = self.create_publisher(AckermannDriveStamped, self.DRIVE_TOPIC, 10)
+
+    def get_velocity(self):
+        self.VELOCITY = self.get_parameter(self.vel_subscription.drive.speed).get_parameter_value().double_value
+        self.STEER = self.get_parameter(self.vel_subscription.drive.steering_angle).get_parameter_value().double_value
 
     def lidar_callback(self, msg):
         """
         Process Lidar data
         """
-        self.VELOCITY = self.get_parameter('velocity').get_parameter_value().double_value
-
         detect = self.safety_control(msg)
 
         drive_msg = AckermannDriveStamped()
         drive_msg.header.stamp = self.get_clock().now().to_msg()
         drive_msg.drive.speed = detect
+        drive_msg.drive.steering_angle = self.STEER
 
         self.publisher.publish(drive_msg)
 
